@@ -1,0 +1,13 @@
+<h1>{{ object.created|date }}</h1>
+<p><a href='/journal/entries/'>Back to index</a></p>
+<p><a href='{% url 'journalentry-edit' pk=object.pk %}'>Edit entry</a></p>
+<hr>
+{% autoescape off %}
+    {{ md_formatted_journal_text | safe }}
+{% endautoescape %}
+<hr>
+<p><b>Read: </b>{% if object.was_read %}✅{% else %}❌{% endif %}</p>
+<a href='{% url 'mark-journal-entry' pk=object.pk %}'>Mark as read</a>
+<form method="POST" action="{% url 'journalentry-delete' pk=object.pk %}">
+   {% csrf_token %}<input type="submit" value="DELETE">
+</form>

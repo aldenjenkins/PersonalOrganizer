@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p><a href='/journal/entries/'>Go to Journal entries</a></p>
+    <p><a href='/todo/upload/'>Create New todo<a></p>
+    <ol>
+    {% for obj in object_list %}
+    <li>{% if obj.is_done %}✅{% else %}❌{% endif %}<a href="{{ obj.get_absolute_url }}">{{ obj }}</a></li>
+    {% endfor %}
+    </ol>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<a href="/todo/entries/">Back to index</a>
+<h1>Created: {{ object.created|date }}</h1>
+<p><a href="{% url 'todoentry-update' pk=object.pk %}">Edit this entry</a></p>
+<hr>
+<h2>{{ object.text }}</h2>
+<hr>
+<p><b>Complete: </b>{% if object.is_done %}✅{% else %}❌{% endif %}</p>
+<a href="/todo/complete/{{ object.id }}/">Mark as complete</a>
+<form method="POST" action="{% url 'todoentry-delete' pk=object.pk %}">
+   {% csrf_token %}<input type="submit" value="DELETE">
+</form>
+
