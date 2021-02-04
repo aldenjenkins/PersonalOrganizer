@@ -1,70 +1,45 @@
+import markdown
+
+from datetime import datetime
+
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.shortcuts import reverse
 
 from journal.models import JournalEntry
 
 
-
 class Command(BaseCommand):
-    help = 'Generates weekly digest for companies.'
-
-    # def add_arguments(self, parser):
-    #     # Get the last Monday to pass.
-    #     cal_week = CalendarWeek() - 1
-    #
-    #     cal_week_start_dt_default = cal_week.start.strftime('%Y-%m-%d')
-    #
-    #     parser.add_argument(
-    #         '--cal_week_start_dt',
-    #         dest='cal_week_start_dt',
-    #         default=cal_week_start_dt_default,
-    #         help='Monday of week to run digest for (YYYY-MM-DD)'
-    #     )
-    #     parser.add_argument(
-    #         '--skip_digest',
-    #         action='store_true',
-    #         dest='skip_digest',
-    #         default=False,
-    #         help='Skip digest generation'
-    #     )
-    #     parser.add_argument(
-    #         '--skip_email',
-    #         action='store_true',
-    #         dest='skip_email',
-    #         default=False,
-    #         help='Skip sending email'
-    #     )
+    help = "Generate email for unread journal entries."
 
     def handle(self, *args, **options):
-        cal_week_start_dt_str = options['cal_week_start_dt']
-        cal_week_start_ts = timezone.datetime.strptime(cal_week_start_dt_str, '%Y-%m-%d')
-        cal_week_start_dt = cal_week_start_ts.date()
-
-        if not options['individual']:
-            for user in User.objects.all():
-                latest_journal_entry = JournalEntry
-                send_email
-        else:
-            email = options['individual']
-            user = User.objects.filter(email=email).first()
-            if not user:
-                self.stderr.write(f'User with email {email} does not exist',ending='')
-                return
-
-        self.stdout.write('email sending done.')
-
-        if not options['skip_digest']:
-            msg = f'Starting digest generation for week of {cal_week_start_dt_str} ... '
-            self.stdout.write(msg, ending='')
-            runner.run(cal_week_start_dt)
-
-        if not options['skip_email']:
-            self.stdout.write('Starting weekly admin digest email task')
-            count = 0
-            companies = Company.objects.filter(is_active=True)
-            for company in companies:
-                # This conditional is a hack for https://github.com/15five/fifteen5/issues/18481
-                if company.digest_weekday == timezone.datetime.now().weekday():
-                    count += send_weekly_admin_digest(company, cal_week_start_dt)
-            self.stdout.write(f'Sent emails to {count} companies for weekly admin digest email task')
+        print(f'email sending started at UTC {datetime.now().strftime("%Y-%m-%d")}')
+        user = User.objects.first()
+        unread_journal_entries = JournalEntry.objects.filter(
+            author=user, read_dt__isnull=True
+        )
+        journals_combined = ' \n \n--- \n \n'.join(
+            [
+                "#" + str(entry.created.strftime("%Y-%m-%d")) + '\n\n' + entry.text
+                for entry in unread_journal_entries
+            ]
+        )
+        entry_text = (
+            'Unread journal entries: \n \n'
+            + f'{journals_combined}'
+            + ' \n--- \n \n'
+            + 'Click here to set each entry as read individually: \n'
+            + f'http://{settings.ALLOWED_HOSTS[1] + reverse("journalentry-list")}'
+        )
+        html_entry = markdown.markdown(entry_text)
+        send_mail(
+            subject=f'{timezone.now().strftime("%Y-%m-%d")} Unread Journal Entries',
+            message=entry_text,
+            from_email="organizerbot@aldenjenkins.com",
+            recipient_list=settings.EMAIL_TO,
+            html_message=html_entry,
+        )
+        print(f'email sending done at UTC {datetime.now().strftime("%Y-%m-%d")}')
