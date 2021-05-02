@@ -6,8 +6,10 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import DeleteView, UpdateView
+from rest_framework.viewsets import ModelViewSet
 
 from todos.models import TodoEntry
+from todos.serializers import TodoEntrySerializer
 from organizer.constants import FILTER_CONSTANTS
 from organizer.mixins import AuthorsObjectsMixin
 
@@ -57,3 +59,16 @@ def mark_todo_complete(request, pk):
     entry.save()
     print(entry.done_dt)
     return HttpResponseRedirect(reverse('todoentry-detail', args=[str(entry.id),]))
+
+
+class TodoEntryViewSet(ModelViewSet):
+    serializer_class = TodoEntrySerializer
+    queryset = TodoEntry.objects.all()
+
+    #def get_queryset(self):
+    #    return JournalEntry.objects.filter(author_id=self.request.user.id)
+
+    def perform_create(self, instance):
+        instance.save(author_id=1)
+
+

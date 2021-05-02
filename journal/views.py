@@ -10,8 +10,10 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView
 from django.views.generic.edit import DeleteView, UpdateView
+from rest_framework.viewsets import ModelViewSet
 
 from journal.forms import JournalEditForm
+from journal.serializers import JournalEntrySerializer
 from journal.models import JournalEntry
 from organizer.constants import FILTER_CONSTANTS
 from organizer.mixins import AuthorsObjectsMixin
@@ -75,3 +77,16 @@ def mark_journal_entry(request, pk):
             ],
         )
     )
+
+
+class JournalEntryViewSet(ModelViewSet):
+    serializer_class = JournalEntrySerializer
+    queryset = JournalEntry.objects.all()
+
+    def get_queryset(self):
+        return JournalEntry.objects.filter(author_id=self.request.user.id)
+
+    def perform_create(self, serializer):
+        instance = serializer.save(author=self.request.user)
+        return super().perform_create(serializer)
+

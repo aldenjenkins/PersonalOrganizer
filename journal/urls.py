@@ -1,6 +1,10 @@
 from django.urls import path
+from rest_framework import routers
 
 from journal import views
+
+router = routers.DefaultRouter()
+router.register(r'api/entries', views.JournalEntryViewSet, basename='entry')
 
 
 urlpatterns = [
@@ -11,3 +15,5 @@ urlpatterns = [
     path('upload/', views.CreateJournalEntry.as_view()),
     path('mark_viewed/<int:pk>/', views.mark_journal_entry, name='mark-journal-entry'),
 ]
+
+urlpatterns += router.urls
