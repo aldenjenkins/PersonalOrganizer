@@ -17,7 +17,6 @@ def get_environ_setting(key, default=no_default_provided):
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-assert os.getenv('EMAIL_TO')
 EMAIL_TO = [os.getenv('EMAIL_TO')]
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
