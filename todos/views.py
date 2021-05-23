@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http.response import Http404, HttpResponseRedirect
 from django.shortcuts import reverse
@@ -51,24 +52,21 @@ class CreateTodoEntry(LoginRequiredMixin, CreateView, AuthorsObjectsMixin):
         return super().form_valid(form)
 
 
+@login_required
 def mark_todo_complete(request, pk):
     entry = TodoEntry.objects.filter(author=request.user, pk=pk).first()
     if not entry:
         raise Http404
     entry.done_dt = timezone.now()
     entry.save()
-    print(entry.done_dt)
     return HttpResponseRedirect(reverse('todoentry-detail', args=[str(entry.id),]))
 
 
-class TodoEntryViewSet(ModelViewSet):
+class TodoEntryViewSet(ModelViewSet, LoginRequiredMixin, AuthorsObjectsMixin):
     serializer_class = TodoEntrySerializer
     queryset = TodoEntry.objects.all()
 
-    #def get_queryset(self):
-    #    return JournalEntry.objects.filter(author_id=self.request.user.id)
-
     def perform_create(self, instance):
-        instance.save(author_id=1)
+        instance.save(author_id=self.request.user.id)
 
 

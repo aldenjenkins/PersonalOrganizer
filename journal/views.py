@@ -79,12 +79,12 @@ def mark_journal_entry(request, pk):
     )
 
 
-class JournalEntryViewSet(ModelViewSet):
+class JournalEntryViewSet(ModelViewSet, LoginRequiredMixin, AuthorsObjectsMixin):
     serializer_class = JournalEntrySerializer
     queryset = JournalEntry.objects.all()
 
-    def get_queryset(self):
-        return JournalEntry.objects.filter(author_id=self.request.user.id)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
     def perform_create(self, serializer):
         instance = serializer.save(author=self.request.user)

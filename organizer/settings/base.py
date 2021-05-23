@@ -1,6 +1,19 @@
 import os
 import datetime
 
+no_default_provided = dict()
+
+def get_environ_setting(key, default=no_default_provided):
+    """ Get the environment variable or raise exception """
+    try:
+        return os.environ[key]
+    except KeyError:
+        if default is no_default_provided:
+            error_msg = f'Set the {key} environment variable'
+            raise ImproperlyConfigured(error_msg)
+        else:
+            return default
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -14,7 +27,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '=ygissuytd@xz*ko(hltr-7xogs(d_22o0ky@ebg6cd^^b3g6s6-'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -33,25 +46,14 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_auth',
     'rest_framework',
         'corsheaders',
     'organizer',
     'digest',
     'journal',
     'todos',
-    'rest_auth',
 )
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    ),
-}
-JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=3),
-}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -62,6 +64,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ),
+}
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=183),
+}
 
 CORS_ORIGIN_ALLOW_ALL = True # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
 CORS_ALLOW_CREDENTIALS = True
@@ -106,11 +119,14 @@ WSGI_APPLICATION = 'organizer.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': get_environ_setting('DB_NAME', 'organizer'),
+        'USER': get_environ_setting('DB_USER', 'organizer'),
+        'PASSWORD': get_environ_setting('DB_PASSWORD', ''),
+        'HOST': get_environ_setting('DB_HOST', '127.0.0.1'),
+        'PORT': get_environ_setting('DB_PORT', '5432'),
     }
 }
 
